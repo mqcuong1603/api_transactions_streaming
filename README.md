@@ -1,397 +1,350 @@
 # Banking Transaction Data API
 
-A FastAPI-based service that generates realistic banking transaction data for fraud detection testing and machine learning training. The API simulates various transaction patterns including normal banking activities and multiple fraud types.
+A FastAPI-based service that generates realistic banking transaction data with built-in fraud patterns for testing fraud detection systems.
 
-## 🚀 Quick Start
+## 🚀 Features
 
-### Prerequisites
-- Python 3.8+
-- pip package manager
+- **Real-time Transaction Generation**: Generate single or batch transactions
+- **Fraud Pattern Simulation**: 4 types of fraud patterns with configurable injection rates
+- **Streaming API**: Server-sent events for continuous data flow
+- **Vietnamese Banking Context**: VND currency, Vietnamese cities, realistic data patterns
+- **Configurable Parameters**: Adjust fraud rates, frequency, and batch sizes
+- **REST API**: Full OpenAPI documentation with Swagger UI
 
-### Installation
+## 📋 Prerequisites
 
-1. **Clone or download the project**
+- Python 3.8 or higher
+- Git
+- pip (Python package installer)
+
+## 🔧 Installation from GitHub
+
+### 1. Clone the Repository
+
 ```bash
-cd d:\Projects\api_transactions_streaming
+git clone https://github.com/mqcuong1603/api_transactions_streaming.git
+cd api_transactions_streaming
 ```
 
-2. **Install dependencies**
+### 2. Create Virtual Environment (Recommended)
+
+**Windows:**
+
+```bash
+python -m venv venv
+venv\Scripts\activate
+```
+
+**macOS/Linux:**
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### 3. Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-3. **Run the API**
+### 4. Verify Installation
+
 ```bash
 python api.py
 ```
 
-The API will start on `http://localhost:8000`
+You should see:
 
-### Verify Installation
-Open your browser and navigate to:
-- **API Home**: http://localhost:8000
-- **Interactive Docs**: http://localhost:8000/docs
-- **Alternative Docs**: http://localhost:8000/redoc
-
-## 📖 API Documentation
-
-### Base URL
 ```
-http://localhost:8000
+INFO:     Started server process [xxxx]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 ```
 
-### Authentication
-No authentication required - this is a development/testing API.
+## 🚀 Quick Start
 
-## 🔧 Endpoints
-
-### 1. Health Check
-**GET /** - Get API information and status
+### Start the API Server
 
 ```bash
-curl http://localhost:8000/
+python api.py
 ```
 
-**Response:**
-```json
-{
-  "message": "Banking Transaction Data API",
-  "description": "Sends raw transaction data for fraud detection testing",
-  "status": "active",
-  "streaming": false,
-  "config": {
-    "frequency_seconds": 1.0,
-    "fraud_injection_rate": 0.05,
-    "batch_size": 1
-  }
-}
-```
+### Test the API
 
-### 2. Single Transaction
-**GET /transaction** - Get a single randomly generated transaction
+Open your browser and visit:
+
+- **Main endpoint**: http://localhost:8000
+- **API Documentation**: http://localhost:8000/docs
+- **Alternative docs**: http://localhost:8000/redoc
+
+### Get a Single Transaction
 
 ```bash
 curl http://localhost:8000/transaction
 ```
 
-**Response:**
-```json
-{
-  "transaction_id": "TXN_00000001",
-  "account_id": "ACC_001234",
-  "branch_id": 5,
-  "transaction_amount_vnd": 2500000.50,
-  "transaction_hour": 14,
-  "transaction_timestamp": "2024-12-19T14:30:45.123456",
-  "location_city": "Ho Chi Minh City",
-  "device_id": "DEV_12345",
-  "biometric_failure_count": 0,
-  "transaction_frequency_5min": 1,
-  "total_loans_vnd": 50000000.00,
-  "num_transactions": 145,
-  "npl_flag": false,
-  "total_deposits_vnd": 75000000.00,
-  "transaction_fees_vnd": 75000.00
-}
-```
-
-### 3. Batch Transactions
-**GET /transactions/{count}** - Get multiple transactions (max 1000)
+### Get Multiple Transactions
 
 ```bash
 curl http://localhost:8000/transactions/10
 ```
 
-**Response:**
+## 📚 API Endpoints
+
+| Method | Endpoint                | Description                          |
+| ------ | ----------------------- | ------------------------------------ |
+| GET    | `/`                     | API information and status           |
+| GET    | `/transaction`          | Get a single transaction             |
+| GET    | `/transactions/{count}` | Get multiple transactions (max 1000) |
+| GET    | `/stream`               | Start streaming transactions         |
+| POST   | `/start`                | Start streaming mode                 |
+| POST   | `/stop`                 | Stop streaming mode                  |
+| GET    | `/status`               | Get API status and statistics        |
+| GET    | `/config`               | Get current configuration            |
+| POST   | `/config`               | Update configuration                 |
+
+## 🔧 Configuration
+
+### Default Configuration
+
 ```json
 {
-  "transactions": [
-    {
-      "transaction_id": "TXN_00000001",
-      "account_id": "ACC_001234",
-      ...
-    },
-    ...
-  ],
-  "count": 10,
-  "timestamp": "2024-12-19T14:30:45.123456"
+  "frequency_seconds": 1.0,
+  "fraud_injection_rate": 0.05,
+  "batch_size": 1
 }
 ```
 
-### 4. Real-time Streaming
-**GET /stream** - Continuously stream transaction data (Server-Sent Events)
+### Update Configuration
 
 ```bash
-curl -N http://localhost:8000/stream
+curl -X POST "http://localhost:8000/config" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "frequency_seconds": 0.5,
+       "fraud_injection_rate": 0.1,
+       "batch_size": 5
+     }'
 ```
 
-**Stream Format:**
-```
-data: {"timestamp": "2024-12-19T14:30:45.123456", "transactions": [...]}
+## 🎯 Fraud Patterns
 
-data: {"timestamp": "2024-12-19T14:30:46.123456", "transactions": [...]}
-```
+The API generates 4 types of fraud patterns:
 
-### 5. Streaming Controls
+### 1. Money Laundering (30% of fraud)
 
-#### Start Streaming
-**POST /start** - Start the streaming service
-
-```bash
-curl -X POST http://localhost:8000/start
-```
-
-#### Stop Streaming
-**POST /stop** - Stop the streaming service
-
-```bash
-curl -X POST http://localhost:8000/stop
-```
-
-### 6. Configuration Management
-
-#### Get Configuration
-**GET /config** - Get current streaming configuration
-
-```bash
-curl http://localhost:8000/config
-```
-
-#### Update Configuration
-**POST /config** - Update streaming settings
-
-```bash
-curl -X POST http://localhost:8000/config \
-  -H "Content-Type: application/json" \
-  -d '{
-    "frequency_seconds": 0.5,
-    "fraud_injection_rate": 0.1,
-    "batch_size": 5
-  }'
-```
-
-**Configuration Parameters:**
-- `frequency_seconds` (float): Time between batches in streaming mode (default: 1.0)
-- `fraud_injection_rate` (float): Percentage of fraudulent transactions (0.0-1.0, default: 0.05)
-- `batch_size` (int): Number of transactions per batch in streaming mode (default: 1)
-
-### 7. Status Monitoring
-**GET /status** - Get API operational status
-
-```bash
-curl http://localhost:8000/status
-```
-
-**Response:**
-```json
-{
-  "streaming": false,
-  "transactions_generated": 1247,
-  "active_accounts": 156,
-  "config": {
-    "frequency_seconds": 1.0,
-    "fraud_injection_rate": 0.05,
-    "batch_size": 1
-  }
-}
-```
-
-## 🏦 Transaction Data Schema
-
-Each transaction contains the following fields:
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `transaction_id` | string | Unique transaction identifier (TXN_xxxxxxxx) |
-| `account_id` | string | Account identifier (ACC_xxxxxx) |
-| `branch_id` | integer | Bank branch ID (1-10) |
-| `transaction_amount_vnd` | float | Transaction amount in Vietnamese Dong |
-| `transaction_hour` | integer | Hour of transaction (0-23) |
-| `transaction_timestamp` | string | ISO format timestamp |
-| `location_city` | string | Transaction location |
-| `device_id` | string | Device identifier |
-| `biometric_failure_count` | integer | Number of biometric authentication failures |
-| `transaction_frequency_5min` | integer | Number of transactions in last 5 minutes for this account |
-| `total_loans_vnd` | float | Total loans for this account |
-| `num_transactions` | integer | Total historical transactions for account |
-| `npl_flag` | boolean | Non-performing loan flag |
-| `total_deposits_vnd` | float | Total deposits for this account |
-| `transaction_fees_vnd` | float | Transaction fees charged |
-
-## 🚨 Fraud Patterns
-
-The API generates realistic fraud patterns for testing:
-
-### 1. Money Laundering
 - **Characteristics**: Large amounts (300M-1B VND), off-hours transactions, high frequency
-- **Detection Indicators**: Unusual transaction times, large amounts, rapid succession
+- **Detection signals**: `transaction_amount_vnd > 300M`, `transaction_frequency_5min > 15`
 
-### 2. Account Takeover
-- **Characteristics**: New/unknown devices, multiple biometric failures, suspicious locations
-- **Detection Indicators**: Device changes, authentication failures, location anomalies
+### 2. Account Takeover (25% of fraud)
 
-### 3. Loan Fraud
-- **Characteristics**: High loan amounts, new accounts with low transaction history
-- **Detection Indicators**: High NPL rates, minimal transaction history, large loans
+- **Characteristics**: New devices, multiple biometric failures, unusual locations
+- **Detection signals**: `device_id` starts with "DEV_NEW_9", `biometric_failure_count >= 3`
 
-### 4. Fee Manipulation
-- **Characteristics**: Small amounts with high frequency, unusual fee ratios
-- **Detection Indicators**: High transaction frequency, abnormal fee patterns
+### 3. Loan Fraud (25% of fraud)
 
-## 💻 Usage Examples
+- **Characteristics**: High loan amounts, low transaction history, high NPL rates
+- **Detection signals**: `total_loans_vnd > 500M`, `num_transactions < 50`, `npl_flag = true`
 
-### Python Client Example
+### 4. Fee Manipulation (20% of fraud)
+
+- **Characteristics**: Small amounts, very high frequency, unusual fee ratios
+- **Detection signals**: `transaction_frequency_5min > 12`, high `transaction_fees_vnd` ratio
+
+## 📊 Usage Examples
+
+### Python Client
+
 ```python
 import requests
 import json
 
 # Get single transaction
-response = requests.get('http://localhost:8000/transaction')
+response = requests.get("http://localhost:8000/transaction")
 transaction = response.json()
 print(json.dumps(transaction, indent=2))
 
 # Get batch of transactions
-response = requests.get('http://localhost:8000/transactions/50')
+response = requests.get("http://localhost:8000/transactions/100")
 batch = response.json()
 print(f"Received {batch['count']} transactions")
 
-# Configure API
+# Update configuration
 config = {
-    "frequency_seconds": 0.5,
-    "fraud_injection_rate": 0.1,
+    "frequency_seconds": 0.1,
+    "fraud_injection_rate": 0.2,
     "batch_size": 10
 }
-response = requests.post('http://localhost:8000/config', json=config)
+response = requests.post("http://localhost:8000/config", json=config)
 print(response.json())
 ```
 
-### JavaScript/Node.js Example
+### JavaScript Client
+
 ```javascript
-const axios = require('axios');
-
 // Get single transaction
-async function getTransaction() {
-    try {
-        const response = await axios.get('http://localhost:8000/transaction');
-        console.log(response.data);
-    } catch (error) {
-        console.error('Error:', error.message);
-    }
-}
+fetch("http://localhost:8000/transaction")
+  .then((response) => response.json())
+  .then((data) => console.log(data));
 
-// Stream transactions (using EventSource in browser)
-const eventSource = new EventSource('http://localhost:8000/stream');
-eventSource.onmessage = function(event) {
-    const data = JSON.parse(event.data);
-    console.log('Received transactions:', data.transactions.length);
+// Stream transactions
+const eventSource = new EventSource("http://localhost:8000/stream");
+eventSource.onmessage = function (event) {
+  const data = JSON.parse(event.data);
+  console.log("Received transactions:", data.transactions.length);
 };
 ```
 
 ### curl Examples
+
 ```bash
-# Get 100 transactions
-curl "http://localhost:8000/transactions/100" | jq '.'
+# Get API status
+curl http://localhost:8000/status
 
-# Update configuration
-curl -X POST "http://localhost:8000/config" \
-  -H "Content-Type: application/json" \
-  -d '{"frequency_seconds": 2.0, "fraud_injection_rate": 0.15}'
+# Start streaming
+curl -X POST http://localhost:8000/start
 
-# Check status
-curl "http://localhost:8000/status" | jq '.'
+# Stop streaming
+curl -X POST http://localhost:8000/stop
 
-# Stream data to file
-curl -N "http://localhost:8000/stream" > transactions.jsonl
+# Get 50 transactions
+curl http://localhost:8000/transactions/50
 ```
 
-## 🔍 Data Analysis Tips
+## 🛠️ Development
 
-### Identifying Fraud Patterns
-1. **High Frequency**: Look for `transaction_frequency_5min > 10`
-2. **Large Amounts**: Monitor `transaction_amount_vnd > 100,000,000`
-3. **Off Hours**: Check `transaction_hour` in ranges [0-4] or [22-23]
-4. **New Devices**: Watch for device IDs starting with "DEV_NEW_"
-5. **Authentication Issues**: Monitor `biometric_failure_count > 2`
-6. **NPL Correlation**: Analyze relationship between `npl_flag` and transaction patterns
+### Running in Development Mode
 
-### Statistical Analysis
-```python
-import pandas as pd
-import requests
-
-# Collect data sample
-transactions = []
-for _ in range(1000):
-    response = requests.get('http://localhost:8000/transaction')
-    transactions.append(response.json())
-
-df = pd.DataFrame(transactions)
-
-# Basic statistics
-print(df.describe())
-
-# Fraud detection analysis
-high_risk = df[
-    (df['transaction_amount_vnd'] > 100_000_000) |
-    (df['transaction_frequency_5min'] > 10) |
-    (df['biometric_failure_count'] > 2)
-]
-print(f"High-risk transactions: {len(high_risk)} ({len(high_risk)/len(df)*100:.1f}%)")
+```bash
+uvicorn api:app --reload --host 0.0.0.0 --port 8000
 ```
 
-## 🛡️ Security Considerations
+### Running Tests
 
-⚠️ **Important**: This API is designed for development and testing purposes only.
+```bash
+# Install test dependencies
+pip install pytest httpx
 
-- **No Authentication**: The API has no built-in security
-- **CORS Enabled**: Allows requests from any origin
-- **Data Privacy**: Generated data is synthetic - no real customer information
-- **Production Use**: Not recommended for production environments without proper security measures
+# Run tests (create test files as needed)
+pytest
+```
+
+### Docker Deployment
+
+```dockerfile
+FROM python:3.9-slim
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY . .
+EXPOSE 8000
+
+CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+```bash
+# Build and run
+docker build -t banking-api .
+docker run -p 8000:8000 banking-api
+```
+
+## 📈 Performance & Scaling
+
+### Performance Tips
+
+- Use batch endpoints for bulk data collection
+- Adjust `frequency_seconds` for optimal streaming rate
+- Monitor memory usage with high-frequency streaming
+- Use appropriate `batch_size` for your use case
+
+### Resource Usage
+
+- **Memory**: ~50MB base + ~1KB per active account
+- **CPU**: Minimal, scales with request frequency
+- **Network**: ~2KB per transaction
+
+## 🔒 Security Considerations
+
+⚠️ **Important**: This API is designed for testing and development only.
+
+- **CORS**: Currently allows all origins (`*`)
+- **Authentication**: No authentication implemented
+- **Rate Limiting**: No rate limiting implemented
+- **Data Privacy**: Uses synthetic data only
+
+For production use, implement:
+
+- Authentication and authorization
+- Rate limiting
+- Input validation
+- Logging and monitoring
+- Proper CORS configuration
 
 ## 🐛 Troubleshooting
 
 ### Common Issues
 
-1. **Port Already in Use**
-   ```bash
-   # Check what's using port 8000
-   netstat -ano | findstr :8000
-   # Kill the process or use a different port
-   ```
+**Port already in use:**
 
-2. **Dependency Issues**
-   ```bash
-   # Upgrade pip and reinstall
-   python -m pip install --upgrade pip
-   pip install -r requirements.txt --force-reinstall
-   ```
+```bash
+# Find process using port 8000
+netstat -ano | findstr :8000
+# Kill the process or use different port
+uvicorn api:app --port 8001
+```
 
-3. **High Memory Usage**
-   - Reduce `batch_size` in configuration
-   - Implement data collection limits in your client
-   - Monitor `active_accounts` in status endpoint
+**Import errors:**
 
-### Performance Optimization
+```bash
+# Ensure virtual environment is activated
+pip install -r requirements.txt
+```
 
-- **Batch Processing**: Use `/transactions/{count}` instead of multiple single requests
-- **Streaming**: Use `/stream` for continuous data collection
-- **Configuration**: Adjust `frequency_seconds` and `batch_size` based on your needs
+**Memory issues with streaming:**
 
-## 📊 Monitoring
+- Reduce `batch_size`
+- Increase `frequency_seconds`
+- Monitor with `/status` endpoint
 
-Monitor API health using the `/status` endpoint:
-- `transactions_generated`: Total transactions created
-- `active_accounts`: Number of accounts with recent activity
-- `streaming`: Current streaming status
+### Logs
 
-## 🤝 Support
+Check console output for detailed logging:
 
-For issues or questions:
-1. Check the interactive documentation at `/docs`
-2. Verify configuration with `/config` endpoint
-3. Monitor status with `/status` endpoint
-4. Review this documentation for usage examples
+```
+INFO:     Transaction streaming started
+INFO:     Configuration updated: {...}
+ERROR:    Stream error: ...
+```
 
-## 📝 License
+## 🤝 Contributing
 
-This project is for educational and testing purposes. Please ensure compliance with your organization's data usage policies.
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/YourUsername/api_transactions_streaming/issues)
+- **Documentation**: [API Docs](http://localhost:8000/docs)
+- **Contact**: Your email or contact information
+
+## 🙏 Acknowledgments
+
+- Built with [FastAPI](https://fastapi.tiangolo.com/)
+- Data generation with [NumPy](https://numpy.org/)
+- Realistic Vietnamese banking context
+
+---
+
+**Note**: This API generates synthetic data for testing purposes only. Do not use with real financial data.
+8
