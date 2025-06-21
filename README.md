@@ -334,9 +334,9 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/YourUsername/api_transactions_streaming/issues)
+- **Issues**: [GitHub Issues](https://github.com/mqcuong1603/api_transactions_streaming/issues)
 - **Documentation**: [API Docs](http://localhost:8000/docs)
-- **Contact**: Your email or contact information
+- **Contact**: mqcuong1603@gmail.com
 
 ## 🙏 Acknowledgments
 
