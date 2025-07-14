@@ -1,23 +1,49 @@
-# Banking Transaction Data API
+# VPBank Transaction Streaming Platform
 
-A FastAPI-based service that generates realistic banking transaction data with built-in fraud patterns for testing fraud detection systems.
+A comprehensive real-time banking transaction data pipeline that generates realistic Vietnamese banking transactions with fraud detection patterns and streams them to AWS Kinesis for real-time analytics and fraud monitoring.
+
+## 🏗️ Architecture Overview
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────────┐
+│   Transaction   │───▶│   Kinesis        │───▶│   Downstream        │
+│   API Server    │    │   Producer       │    │   Analytics         │
+│   (FastAPI)     │    │   (boto3)        │    │   (Lambda, etc.)    │
+└─────────────────┘    └──────────────────┘    └─────────────────────┘
+```
 
 ## 🚀 Features
 
-- **Real-time Transaction Generation**: Generate single or batch transactions
-- **Fraud Pattern Simulation**: 4 types of fraud patterns with configurable injection rates
-- **Streaming API**: Server-sent events for continuous data flow
-- **Vietnamese Banking Context**: VND currency, Vietnamese cities, realistic data patterns
-- **Configurable Parameters**: Adjust fraud rates, frequency, and batch sizes
+### Transaction API Server
+
+- **Real-time Transaction Generation**: Generate single or batch Vietnamese banking transactions
+- **Fraud Pattern Simulation**: 4 sophisticated fraud patterns with configurable injection rates
 - **REST API**: Full OpenAPI documentation with Swagger UI
+- **Vietnamese Banking Context**: VND currency, Vietnamese cities, realistic account patterns
+
+### Kinesis Streaming Producer
+
+- **AWS Kinesis Integration**: Real-time streaming to AWS Kinesis Data Streams
+- **Fraud Detection Enhancement**: Enriches transactions with fraud detection features
+- **Batch Processing**: Efficient batch sending with configurable parameters
+- **Connection Testing**: Built-in health checks for API and Kinesis connectivity
+- **Statistics Monitoring**: Real-time fraud rate monitoring and alerting
+
+### Data Generation Features
+
+- **Realistic Banking Data**: Vietnamese bank account patterns, cities, and transaction types
+- **Fraud Simulation**: Money laundering, account takeover, loan fraud, and fee manipulation
+- **Configurable Parameters**: Adjust fraud rates, batch sizes, and streaming intervals
+- **High-Volume Capable**: Supports high-frequency transaction generation
 
 ## 📋 Prerequisites
 
 - Python 3.8 or higher
+- AWS Account with Kinesis access
 - Git
 - pip (Python package installer)
 
-## 🔧 Installation from GitHub
+## 🔧 Installation
 
 ### 1. Clone the Repository
 
@@ -26,7 +52,7 @@ git clone https://github.com/mqcuong1603/api_transactions_streaming.git
 cd api_transactions_streaming
 ```
 
-### 2. Create Virtual Environment (Recommended)
+### 2. Create Virtual Environment
 
 **Windows:**
 
@@ -48,50 +74,71 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Verify Installation
+### 4. Environment Configuration
 
-```bash
-python api.py
-```
+Create a `.env` file in the project root:
 
-You should see:
+```env
+# AWS Configuration
+AWS_ACCESS_KEY_ID=your_access_key_id
+AWS_SECRET_ACCESS_KEY=your_secret_access_key
+AWS_DEFAULT_REGION=ap-southeast-1
 
-```
-INFO:     Started server process [xxxx]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+# Kinesis Configuration
+KINESIS_STREAM_NAME=Transactions
+
+# API Configuration
+TRANSACTION_API_URL=http://localhost:8000
 ```
 
 ## 🚀 Quick Start
 
-### Start the API Server
+### 1. Start the Transaction API Server
 
 ```bash
 python api.py
 ```
 
-### Test the API
-
-Open your browser and visit:
+The API will be available at:
 
 - **Main endpoint**: http://localhost:8000
 - **API Documentation**: http://localhost:8000/docs
 - **Alternative docs**: http://localhost:8000/redoc
 
-### Get a Single Transaction
+### 2. Test Kinesis Connection
 
 ```bash
-curl http://localhost:8000/transaction
+python kinesis_producer.py test
 ```
 
-### Get Multiple Transactions
+Expected output:
+
+```
+✅ Kinesis Producer initialized
+📍 Region: ap-southeast-1
+🌊 Stream: Transactions
+🔗 API URL: http://localhost:8000
+🧪 Testing single transaction...
+📤 TXN_00000001 | ✅ Normal | 5.2M VND | Shard: 0000
+✅ Single transaction test successful!
+```
+
+### 3. Start Real-time Streaming
 
 ```bash
-curl http://localhost:8000/transactions/10
+python kinesis_producer.py stream
+```
+
+Or with custom parameters:
+
+```bash
+python kinesis_producer.py stream 20 3 100
+# batch_size=20, interval=3s, max_batches=100
 ```
 
 ## 📚 API Endpoints
+
+### Transaction API Server
 
 | Method | Endpoint                | Description                          |
 | ------ | ----------------------- | ------------------------------------ |
@@ -105,19 +152,52 @@ curl http://localhost:8000/transactions/10
 | GET    | `/config`               | Get current configuration            |
 | POST   | `/config`               | Update configuration                 |
 
-## 🔧 Configuration
+### Kinesis Producer CLI
 
-### Default Configuration
+| Command  | Usage                                                                     | Description                      |
+| -------- | ------------------------------------------------------------------------- | -------------------------------- |
+| `test`   | `python kinesis_producer.py test`                                         | Test API and Kinesis connections |
+| `stream` | `python kinesis_producer.py stream [batch_size] [interval] [max_batches]` | Start streaming with parameters  |
 
-```json
-{
-  "frequency_seconds": 1.0,
-  "fraud_injection_rate": 0.05,
-  "batch_size": 1
-}
-```
+## 🎯 Fraud Detection Patterns
 
-### Update Configuration
+The system generates 4 sophisticated fraud patterns:
+
+### 1. Money Laundering (30% of fraud)
+
+- **Characteristics**: Large amounts (300M-1B VND), off-hours transactions, high frequency
+- **Kinesis Enrichment**: `high_amount_flag`, `off_hours_flag`, `high_frequency_flag`
+- **Detection Signals**:
+  - `transaction_amount_vnd > 300,000,000`
+  - `transaction_frequency_5min > 15`
+  - `transaction_hour in [1,2,3,22,23,24]`
+
+### 2. Account Takeover (25% of fraud)
+
+- **Characteristics**: New devices, multiple biometric failures, unusual locations
+- **Kinesis Enrichment**: `suspicious_device_flag`
+- **Detection Signals**:
+  - `device_id` starts with "DEV_NEW_9"
+  - `biometric_failure_count >= 3`
+
+### 3. Loan Fraud (25% of fraud)
+
+- **Characteristics**: High loan amounts, low transaction history, high NPL rates
+- **Detection Signals**:
+  - `total_loans_vnd > 500,000,000`
+  - `num_transactions < 50`
+  - `npl_flag = true`
+
+### 4. Fee Manipulation (20% of fraud)
+
+- **Characteristics**: Small amounts, very high frequency, unusual fee ratios
+- **Detection Signals**:
+  - `transaction_frequency_5min > 12`
+  - High `transaction_fees_vnd` to amount ratio
+
+## � Configuration Examples
+
+### Update API Configuration
 
 ```bash
 curl -X POST "http://localhost:8000/config" \
@@ -129,195 +209,162 @@ curl -X POST "http://localhost:8000/config" \
      }'
 ```
 
-## 🎯 Fraud Patterns
-
-The API generates 4 types of fraud patterns:
-
-### 1. Money Laundering (30% of fraud)
-
-- **Characteristics**: Large amounts (300M-1B VND), off-hours transactions, high frequency
-- **Detection signals**: `transaction_amount_vnd > 300M`, `transaction_frequency_5min > 15`
-
-### 2. Account Takeover (25% of fraud)
-
-- **Characteristics**: New devices, multiple biometric failures, unusual locations
-- **Detection signals**: `device_id` starts with "DEV_NEW_9", `biometric_failure_count >= 3`
-
-### 3. Loan Fraud (25% of fraud)
-
-- **Characteristics**: High loan amounts, low transaction history, high NPL rates
-- **Detection signals**: `total_loans_vnd > 500M`, `num_transactions < 50`, `npl_flag = true`
-
-### 4. Fee Manipulation (20% of fraud)
-
-- **Characteristics**: Small amounts, very high frequency, unusual fee ratios
-- **Detection signals**: `transaction_frequency_5min > 12`, high `transaction_fees_vnd` ratio
-
-## 📊 Usage Examples
-
-### Python Client
-
-```python
-import requests
-import json
-
-# Get single transaction
-response = requests.get("http://localhost:8000/transaction")
-transaction = response.json()
-print(json.dumps(transaction, indent=2))
-
-# Get batch of transactions
-response = requests.get("http://localhost:8000/transactions/100")
-batch = response.json()
-print(f"Received {batch['count']} transactions")
-
-# Update configuration
-config = {
-    "frequency_seconds": 0.1,
-    "fraud_injection_rate": 0.2,
-    "batch_size": 10
-}
-response = requests.post("http://localhost:8000/config", json=config)
-print(response.json())
-```
-
-### JavaScript Client
-
-```javascript
-// Get single transaction
-fetch("http://localhost:8000/transaction")
-  .then((response) => response.json())
-  .then((data) => console.log(data));
-
-// Stream transactions
-const eventSource = new EventSource("http://localhost:8000/stream");
-eventSource.onmessage = function (event) {
-  const data = JSON.parse(event.data);
-  console.log("Received transactions:", data.transactions.length);
-};
-```
-
-### curl Examples
+### Stream with Custom Parameters
 
 ```bash
-# Get API status
-curl http://localhost:8000/status
+# High-frequency streaming (batch=50, interval=1s, max=1000 batches)
+python kinesis_producer.py stream 50 1 1000
 
-# Start streaming
-curl -X POST http://localhost:8000/start
-
-# Stop streaming
-curl -X POST http://localhost:8000/stop
-
-# Get 50 transactions
-curl http://localhost:8000/transactions/50
+# Low-frequency streaming (batch=5, interval=10s, unlimited)
+python kinesis_producer.py stream 5 10
 ```
 
-## 🛠️ Development
+## 📊 Monitoring and Alerts
 
-### Running in Development Mode
+### Real-time Statistics
+
+The Kinesis producer provides real-time monitoring:
+
+```
+📦 Batch sent: 20/20 success | 3 fraud detected
+📈 Total: 500 transactions | 25 fraud (5.0%)
+🚨 HIGH FRAUD ALERT: 8/20 transactions in this batch!
+```
+
+### Key Metrics Tracked
+
+- **Transaction Volume**: Total transactions processed
+- **Fraud Rate**: Percentage of fraudulent transactions
+- **Batch Success Rate**: Kinesis delivery success rate
+- **High Fraud Alerts**: Batches with >30% fraud rate
+- **Shard Distribution**: Kinesis shard utilization
+
+## 🛠️ Development & Testing
+
+### Generate Test Data
+
+```bash
+# Generate sample CSV data
+python generate_banking_csv.py
+```
+
+### Run Development Server
 
 ```bash
 uvicorn api:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### Running Tests
+### Test Individual Components
 
-```bash
-# Install test dependencies
-pip install pytest httpx
+```python
+# Test single transaction
+import requests
+response = requests.get("http://localhost:8000/transaction")
+print(response.json())
 
-# Run tests (create test files as needed)
-pytest
+# Test Kinesis connectivity
+from kinesis_producer import VPBankKinesisProducer
+producer = VPBankKinesisProducer()
+producer.test_connections()
 ```
 
-### Docker Deployment
+## � Security & Best Practices
 
-```dockerfile
-FROM python:3.9-slim
+### Environment Variables
 
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+- Store AWS credentials in `.env` file (never commit to git)
+- Use IAM roles with minimal Kinesis permissions
+- Rotate access keys regularly
 
-COPY . .
-EXPOSE 8000
+### AWS IAM Permissions
 
-CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+Minimum required permissions for Kinesis:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kinesis:PutRecord",
+        "kinesis:PutRecords",
+        "kinesis:DescribeStream"
+      ],
+      "Resource": "arn:aws:kinesis:ap-southeast-1:*:stream/Transactions"
+    }
+  ]
+}
 ```
 
-```bash
-# Build and run
-docker build -t banking-api .
-docker run -p 8000:8000 banking-api
-```
+### Data Privacy
 
-## 📈 Performance & Scaling
-
-### Performance Tips
-
-- Use batch endpoints for bulk data collection
-- Adjust `frequency_seconds` for optimal streaming rate
-- Monitor memory usage with high-frequency streaming
-- Use appropriate `batch_size` for your use case
-
-### Resource Usage
-
-- **Memory**: ~50MB base + ~1KB per active account
-- **CPU**: Minimal, scales with request frequency
-- **Network**: ~2KB per transaction
-
-## 🔒 Security Considerations
-
-⚠️ **Important**: This API is designed for testing and development only.
-
-- **CORS**: Currently allows all origins (`*`)
-- **Authentication**: No authentication implemented
-- **Rate Limiting**: No rate limiting implemented
-- **Data Privacy**: Uses synthetic data only
-
-For production use, implement:
-
-- Authentication and authorization
-- Rate limiting
-- Input validation
-- Logging and monitoring
-- Proper CORS configuration
+- Uses synthetic data only
+- No real banking information
+- Safe for development and testing
 
 ## 🐛 Troubleshooting
 
 ### Common Issues
 
-**Port already in use:**
+**AWS Credentials Error:**
 
 ```bash
-# Find process using port 8000
-netstat -ano | findstr :8000
-# Kill the process or use different port
-uvicorn api:app --port 8001
+# Check .env file exists and contains valid credentials
+cat .env
+
+# Verify AWS CLI access
+aws kinesis describe-stream --stream-name Transactions
 ```
 
-**Import errors:**
+**Kinesis Stream Not Found:**
 
 ```bash
-# Ensure virtual environment is activated
-pip install -r requirements.txt
+# Create Kinesis stream
+aws kinesis create-stream --stream-name Transactions --shard-count 1
+
+# Check stream status
+aws kinesis describe-stream --stream-name Transactions
 ```
 
-**Memory issues with streaming:**
+**API Connection Failed:**
 
-- Reduce `batch_size`
-- Increase `frequency_seconds`
-- Monitor with `/status` endpoint
+```bash
+# Check if API server is running
+curl http://localhost:8000/status
 
-### Logs
-
-Check console output for detailed logging:
-
+# Start API server if not running
+python api.py
 ```
-INFO:     Transaction streaming started
-INFO:     Configuration updated: {...}
-ERROR:    Stream error: ...
+
+**High Memory Usage:**
+
+```bash
+# Reduce batch size and increase interval
+python kinesis_producer.py stream 10 5
+```
+
+## 📈 Performance Optimization
+
+### Recommended Settings
+
+| Use Case     | Batch Size | Interval | Max Batches |
+| ------------ | ---------- | -------- | ----------- |
+| Development  | 5-10       | 5-10s    | 50-100      |
+| Testing      | 20-50      | 1-3s     | 500-1000    |
+| Load Testing | 100-500    | 0.1-1s   | 10000+      |
+
+### Monitoring Performance
+
+```bash
+# Monitor with built-in statistics
+python kinesis_producer.py stream 20 2 1000
+
+# Check AWS CloudWatch metrics
+aws cloudwatch get-metric-statistics \
+  --namespace AWS/Kinesis \
+  --metric-name IncomingRecords \
+  --dimensions Name=StreamName,Value=Transactions
 ```
 
 ## 🤝 Contributing
@@ -340,11 +387,11 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🙏 Acknowledgments
 
-- Built with [FastAPI](https://fastapi.tiangolo.com/)
-- Data generation with [NumPy](https://numpy.org/)
-- Realistic Vietnamese banking context
+- Built with [FastAPI](https://fastapi.tiangolo.com/) for the API server
+- [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html) for AWS Kinesis integration
+- Data generation with [NumPy](https://numpy.org/) and realistic Vietnamese banking patterns
+- AWS Kinesis for real-time data streaming
 
 ---
 
-**Note**: This API generates synthetic data for testing purposes only. Do not use with real financial data.
-8
+**⚠️ Important**: This system generates synthetic banking data for testing and development purposes only. Do not use with real financial data or in production environments without proper security measures.
